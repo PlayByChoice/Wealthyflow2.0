@@ -1,6 +1,6 @@
 "use server";
 
-import { createHash, timingSafeEqual } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 import { redirect } from "next/navigation";
 import { createSession } from "@/lib/session";
 
@@ -8,13 +8,18 @@ export type LoginState = {
   error: string | null;
 };
 
-const FALLBACK_EMAIL = "demo@wealthyflow.com";
-const FALLBACK_PASSWORD = "ChangeMe123!";
+const DEFAULT_DEMO_EMAIL = "demo@wealthyflow.com";
+const DEFAULT_DEMO_PASSWORD = "ChangeMe123!";
 
 function safeEqual(left: string, right: string) {
-  const leftHash = createHash("sha256").update(left).digest();
-  const rightHash = createHash("sha256").update(right).digest();
-  return timingSafeEqual(leftHash, rightHash);
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 export async function loginAction(_: LoginState, formData: FormData): Promise<LoginState> {
@@ -29,8 +34,8 @@ export async function loginAction(_: LoginState, formData: FormData): Promise<Lo
     return { error: "Server auth configuration is missing." };
   }
 
-  const validEmail = process.env.AUTH_DEMO_EMAIL ?? FALLBACK_EMAIL;
-  const validPassword = process.env.AUTH_DEMO_PASSWORD ?? FALLBACK_PASSWORD;
+  const validEmail = process.env.AUTH_DEMO_EMAIL ?? DEFAULT_DEMO_EMAIL;
+  const validPassword = process.env.AUTH_DEMO_PASSWORD ?? DEFAULT_DEMO_PASSWORD;
 
   if (email !== validEmail.toLowerCase() || !safeEqual(password, validPassword)) {
     return { error: "Invalid credentials." };

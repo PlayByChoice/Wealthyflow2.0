@@ -18,6 +18,6 @@ npm run dev
 
 Auth now uses a local SQLite database (`web/data/wealthyflow.db` by default).
 
-Use the credentials in `.env.local` (`AUTH_DEMO_EMAIL` and `AUTH_DEMO_PASSWORD`) for the initial seeded user.
+Use the credentials in `.env.local` (`AUTH_ADMIN_USERNAME` and `AUTH_ADMIN_PASSWORD`) for the initial seeded admin user.
 
 You can change DB location with `DATABASE_PATH`.

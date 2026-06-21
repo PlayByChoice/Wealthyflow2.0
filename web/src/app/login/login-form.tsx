@@ -11,15 +11,15 @@ export default function LoginForm() {
   return (
     <form action={formAction} className="w-full max-w-sm space-y-4 rounded-lg border border-black/10 p-6">
       <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="email">
-          Email
+        <label className="block text-sm font-medium" htmlFor="username">
+          Username
         </label>
         <input
-          id="email"
-          name="email"
-          type="email"
+          id="username"
+          name="username"
+          type="text"
           required
-          autoComplete="email"
+          autoComplete="username"
           className="w-full rounded-md border border-black/20 px-3 py-2"
         />
       </div>

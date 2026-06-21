@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { findUserByEmail, ensureDemoUser, verifyUserPassword } from "@/lib/db";
+import { ensureAdminUser, findUserByUsername, verifyUserPassword } from "@/lib/db";
 import { createSession } from "@/lib/session";
 
 export type LoginState = {
@@ -9,21 +9,21 @@ export type LoginState = {
 };
 
 export async function loginAction(_: LoginState, formData: FormData): Promise<LoginState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const username = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  if (!email || !password) {
-    return { error: "Email and password are required." };
+  if (!username || !password) {
+    return { error: "Username and password are required." };
   }
 
-  ensureDemoUser();
+  ensureAdminUser();
 
-  const user = findUserByEmail(email);
+  const user = findUserByUsername(username);
 
   if (!user || !verifyUserPassword(user, password)) {
     return { error: "Invalid credentials." };
   }
 
-  await createSession(email);
+  await createSession(username);
   redirect("/dashboard");
 }

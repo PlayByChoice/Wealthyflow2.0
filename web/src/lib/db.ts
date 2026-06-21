@@ -4,13 +4,13 @@ import path from "node:path";
 import Database from "better-sqlite3";
 
 export type UserRecord = {
-  email: string;
+  username: string;
   passwordHash: string;
   salt: string;
 };
 
-const DEFAULT_DEMO_EMAIL = "demo@wealthyflow.com";
-const DEFAULT_DEMO_PASSWORD = "ChangeMe123!";
+const DEFAULT_ADMIN_USERNAME = "Thetymes1";
+const DEFAULT_ADMIN_PASSWORD = "Pass1698$";
 
 let dbInstance: Database.Database | null = null;
 
@@ -52,16 +52,16 @@ function getDb() {
   return db;
 }
 
-export function ensureDemoUser() {
-  const email = (process.env.AUTH_DEMO_EMAIL ?? DEFAULT_DEMO_EMAIL).trim().toLowerCase();
-  const password = process.env.AUTH_DEMO_PASSWORD ?? DEFAULT_DEMO_PASSWORD;
+export function ensureAdminUser() {
+  const username = (process.env.AUTH_ADMIN_USERNAME ?? DEFAULT_ADMIN_USERNAME).trim();
+  const password = process.env.AUTH_ADMIN_PASSWORD ?? DEFAULT_ADMIN_PASSWORD;
 
-  if (!email || !password) {
+  if (!username || !password) {
     return;
   }
 
   const db = getDb();
-  const existing = db.prepare("SELECT email FROM users WHERE email = ?").get(email) as { email: string } | undefined;
+  const existing = db.prepare("SELECT email FROM users WHERE email = ?").get(username) as { email: string } | undefined;
 
   if (existing) {
     return;
@@ -70,14 +70,14 @@ export function ensureDemoUser() {
   const salt = randomBytes(16).toString("hex");
   const passwordHash = hashPassword(password, salt);
 
-  db.prepare("INSERT INTO users (email, password_hash, salt) VALUES (?, ?, ?)").run(email, passwordHash, salt);
+  db.prepare("INSERT INTO users (email, password_hash, salt) VALUES (?, ?, ?)").run(username, passwordHash, salt);
 }
 
-export function findUserByEmail(email: string): UserRecord | null {
+export function findUserByUsername(username: string): UserRecord | null {
   const db = getDb();
   const user = db
-    .prepare("SELECT email, password_hash AS passwordHash, salt FROM users WHERE email = ?")
-    .get(email) as UserRecord | undefined;
+    .prepare("SELECT email AS username, password_hash AS passwordHash, salt FROM users WHERE email = ?")
+    .get(username) as UserRecord | undefined;
 
   return user ?? null;
 }

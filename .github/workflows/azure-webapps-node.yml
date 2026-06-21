@@ -23,10 +23,10 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_DEPLOY_ENABLED: ${{ vars.AZURE_WEBAPP_DEPLOY_ENABLED || 'false' }} # set AZURE_WEBAPP_DEPLOY_ENABLED repository variable to 'true' to enable deployment
-  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # configure in repository variables
-  AZURE_WEBAPP_PACKAGE_PATH: ${{ vars.AZURE_WEBAPP_PACKAGE_PATH || '.' }} # configure in repository variables
-  NODE_VERSION: ${{ vars.NODE_VERSION || '20.x' }} # configure in repository variables
+  AZURE_WEBAPP_DEPLOY_ENABLED: ${{ vars.AZURE_WEBAPP_DEPLOY_ENABLED || 'false' }} # set AZURE_WEBAPP_DEPLOY_ENABLED repository configuration variable to 'true' to enable deployment
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # configure in repository configuration variables
+  AZURE_WEBAPP_PACKAGE_PATH: ${{ vars.AZURE_WEBAPP_PACKAGE_PATH || '.' }} # configure in repository configuration variables
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.x' }} # configure in repository configuration variables
 
 permissions:
   contents: read
@@ -108,7 +108,7 @@ jobs:
     - name: Check artifact upload requirements
       id: artifact-config
       run: |
-        if [ "${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}" = "true" ] && [ -n "${{ env.AZURE_WEBAPP_NAME }}" ] && [ -n "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}" ]; then
+        if [ "${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}" = "true" ] && [ -n "${{ env.AZURE_WEBAPP_NAME }}" ] && [ "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}" = "true" ]; then
           echo "should_upload=true" >> "$GITHUB_OUTPUT"
         else
           echo "should_upload=false" >> "$GITHUB_OUTPUT"

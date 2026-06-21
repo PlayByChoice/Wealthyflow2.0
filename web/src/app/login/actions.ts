@@ -37,7 +37,7 @@ export async function loginAction(_: LoginState, formData: FormData): Promise<Lo
   const validEmail = process.env.AUTH_DEMO_EMAIL ?? DEFAULT_DEMO_EMAIL;
   const validPassword = process.env.AUTH_DEMO_PASSWORD ?? DEFAULT_DEMO_PASSWORD;
 
-  if (email !== validEmail.toLowerCase() || !safeEqual(password, validPassword)) {
+  if (!safeEqual(email, validEmail.toLowerCase()) || !safeEqual(password, validPassword)) {
     return { error: "Invalid credentials." };
   }
 

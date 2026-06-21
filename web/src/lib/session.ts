@@ -13,8 +13,8 @@ function getSecret() {
   const secret = process.env.SESSION_SECRET;
 
   if (secret) {
-    if (process.env.NODE_ENV === "production" && secret.length < 32) {
-      throw new Error("SESSION_SECRET must be at least 32 characters in production.");
+    if (process.env.NODE_ENV === "production" && secret.length < 64) {
+      throw new Error("SESSION_SECRET must be at least 64 characters in production.");
     }
 
     return secret;

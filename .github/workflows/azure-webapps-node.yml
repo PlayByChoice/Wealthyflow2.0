@@ -23,7 +23,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: your-app-name    # set this to your application's name
+  AZURE_WEBAPP_DEPLOY_ENABLED: 'false' # set to 'true' after configuring Azure deployment
+  AZURE_WEBAPP_NAME: ''                # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '20.x'                # set this to the node version to use
 
@@ -36,13 +37,76 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Node.js
+    - name: Detect Node.js project files
+      id: node-files
+      run: |
+        project_path_input="${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+        candidate_path="$GITHUB_WORKSPACE/$project_path_input"
+        project_path="."
+
+        if [ ! -d "$candidate_path" ]; then
+          echo "has_package=false" >> "$GITHUB_OUTPUT"
+          echo "has_npm_lock=false" >> "$GITHUB_OUTPUT"
+          echo "project_path=$project_path" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        workspace_path="$(realpath "$GITHUB_WORKSPACE")"
+        resolved_project_path="$(realpath "$candidate_path")"
+
+        case "$resolved_project_path" in
+          "$workspace_path") ;;
+          "$workspace_path"/*)
+            project_path="${resolved_project_path#"$workspace_path"/}"
+            ;;
+          *)
+            echo "::error::AZURE_WEBAPP_PACKAGE_PATH must stay within the repository."
+            exit 1
+            ;;
+        esac
+
+        cache_prefix=""
+        if [ "$project_path" != "." ]; then
+          cache_prefix="$project_path/"
+        fi
+
+        echo "project_path=$project_path" >> "$GITHUB_OUTPUT"
+        cd -- "$resolved_project_path"
+
+        if [ -f package.json ]; then
+          echo "has_package=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_package=false" >> "$GITHUB_OUTPUT"
+        fi
+
+        if [ -f package-lock.json ]; then
+          echo "has_npm_lock=true" >> "$GITHUB_OUTPUT"
+          echo "cache_dependency_path=${cache_prefix}package-lock.json" >> "$GITHUB_OUTPUT"
+        elif [ -f npm-shrinkwrap.json ]; then
+          echo "has_npm_lock=true" >> "$GITHUB_OUTPUT"
+          echo "cache_dependency_path=${cache_prefix}npm-shrinkwrap.json" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_npm_lock=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Set up Node.js with npm cache
+      if: ${{ steps.node-files.outputs.has_package == 'true' && steps.node-files.outputs.has_npm_lock == 'true' }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
+        cache-dependency-path: ${{ steps.node-files.outputs.cache_dependency_path }}
         cache: 'npm'
 
+    - name: Set up Node.js
+      if: ${{ steps.node-files.outputs.has_package == 'true' && steps.node-files.outputs.has_npm_lock == 'false' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
     - name: npm install, build, and test
+      if: ${{ steps.node-files.outputs.has_package == 'true' }}
+      # Run npm commands from the configured application path.
+      working-directory: ${{ steps.node-files.outputs.project_path }}
       run: |
         npm install
         npm run build --if-present
@@ -69,7 +133,28 @@ jobs:
       with:
         name: node-app
 
+    - name: Check Azure deployment configuration
+      id: deployment-config
+      env:
+        AZURE_WEBAPP_DEPLOY_ENABLED: ${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}
+        AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
+        AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      run: |
+        if [ "$AZURE_WEBAPP_DEPLOY_ENABLED" != "true" ]; then
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "Azure deployment is disabled; skipping deploy."
+        elif [ -z "$AZURE_WEBAPP_NAME" ]; then
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "AZURE_WEBAPP_NAME is not set; skipping deploy."
+        elif [ -z "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "AZURE_WEBAPP_PUBLISH_PROFILE is not set; skipping deploy."
+        else
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: 'Deploy to Azure WebApp'
+      if: ${{ steps.deployment-config.outputs.configured == 'true' }}
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:

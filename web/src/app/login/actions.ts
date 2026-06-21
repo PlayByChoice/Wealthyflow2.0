@@ -28,7 +28,7 @@ export async function loginAction(_: LoginState, formData: FormData): Promise<Lo
   }
 
   if (!ensureAdminUser()) {
-    return { error: "Authentication not configured. Set AUTH_ADMIN_USERNAME and AUTH_ADMIN_PASSWORD." };
+    return { error: "Authentication system unavailable." };
   }
 
   const user = findUserByUsername(username);

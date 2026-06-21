@@ -12,10 +12,10 @@ export type UserRecord = {
 let dbInstance: Database.Database | null = null;
 
 function getDatabasePath() {
-  const configured = process.env.DATABASE_PATH ?? "./data/wealthyflow.db";
-  return path.isAbsolute(configured)
-    ? configured
-    : path.resolve(/* turbopackIgnore: true */ process.cwd(), configured);
+  const configuredPath = process.env.DATABASE_PATH ?? "./data/wealthyflow.db";
+  return path.isAbsolute(configuredPath)
+    ? configuredPath
+    : path.resolve(/* turbopackIgnore: true */ process.cwd(), configuredPath);
 }
 
 function hashPassword(password: string, salt: string) {

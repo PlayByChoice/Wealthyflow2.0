@@ -41,8 +41,17 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
 
+    - name: Detect Node project
+      id: node_project
+      run: |
+        if [ -f package.json ]; then
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: npm install, build, and test
-      if: hashFiles('package.json')
+      if: steps.node_project.outputs.exists == 'true'
       run: |
         npm install
         npm run build --if-present

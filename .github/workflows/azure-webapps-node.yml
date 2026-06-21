@@ -103,6 +103,19 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
 
+    - name: Check artifact upload requirements
+      id: artifact-config
+      env:
+        AZURE_WEBAPP_DEPLOY_ENABLED: ${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}
+        AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
+        AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      run: |
+        if [ "$AZURE_WEBAPP_DEPLOY_ENABLED" = "true" ] && [ -n "$AZURE_WEBAPP_NAME" ] && [ -n "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
+          echo "should_upload=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "should_upload=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: npm install, build, and test
       if: ${{ steps.node-files.outputs.has_package == 'true' }}
       # Run npm commands from the configured application path.
@@ -113,6 +126,7 @@ jobs:
         npm run test --if-present
 
     - name: Upload artifact for deployment job
+      if: ${{ steps.artifact-config.outputs.should_upload == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: node-app
@@ -128,11 +142,6 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-    - name: Download artifact from build job
-      uses: actions/download-artifact@v4
-      with:
-        name: node-app
-
     - name: Check Azure deployment configuration
       id: deployment-config
       env:
@@ -152,6 +161,12 @@ jobs:
         else
           echo "configured=true" >> "$GITHUB_OUTPUT"
         fi
+
+    - name: Download artifact from build job
+      if: ${{ steps.deployment-config.outputs.configured == 'true' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: node-app
 
     - name: 'Deploy to Azure WebApp'
       if: ${{ steps.deployment-config.outputs.configured == 'true' }}

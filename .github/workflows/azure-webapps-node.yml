@@ -149,7 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      # Deploy targets the Production environment (configure protection rules in repository settings if manual approval gates are needed).
+      # Deploy targets the Production environment; configure environment protection rules before merge if approval gates are required.
       name: Production
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 

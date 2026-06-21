@@ -25,7 +25,7 @@ on:
 env:
   AZURE_WEBAPP_DEPLOY_ENABLED: ${{ vars.AZURE_WEBAPP_DEPLOY_ENABLED || 'false' }} # set AZURE_WEBAPP_DEPLOY_ENABLED repository configuration variable to 'true' to enable deployment
   AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # configure in repository configuration variables
-  AZURE_WEBAPP_PACKAGE_PATH: ${{ vars.AZURE_WEBAPP_PACKAGE_PATH || '.' }} # configure in repository configuration variables
+  AZURE_WEBAPP_PACKAGE_PATH: ${{ vars.AZURE_WEBAPP_PACKAGE_PATH || 'web' }} # configure in repository configuration variables
   NODE_VERSION: ${{ vars.NODE_VERSION || '20.x' }} # configure in repository configuration variables
 
 permissions:

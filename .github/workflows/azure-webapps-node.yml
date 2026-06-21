@@ -20,10 +20,12 @@
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_DEPLOY_ENABLED: 'true' # set to 'true' to enable Azure deployment
+  AZURE_WEBAPP_DEPLOY_ENABLED: 'false' # set to 'true' to enable Azure deployment after configuration is complete
   AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # set as a repository variable (Settings > Secrets and variables > Actions)
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '20.x'                # set this to the node version to use
@@ -143,7 +145,7 @@ jobs:
 
   deploy:
     # Deploy automatically when build succeeds and deployment configuration is complete.
-    if: needs.build.outputs.deployment_configured == 'true'
+    if: github.event_name == 'push' && needs.build.outputs.deployment_configured == 'true'
     permissions:
       contents: none
     runs-on: ubuntu-latest

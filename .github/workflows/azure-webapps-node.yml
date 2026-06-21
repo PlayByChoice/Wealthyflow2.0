@@ -19,7 +19,7 @@
 
 on:
   push:
-    branches: [ "main", "production", "release", "master", "stable" ] # deploy from conventional live/prod branch names
+    branches: [ "main" ] # canonical live deployment branch
   workflow_dispatch:
 
 env:
@@ -107,12 +107,8 @@ jobs:
 
     - name: Check artifact upload requirements
       id: artifact-config
-      env:
-        AZURE_WEBAPP_DEPLOY_ENABLED: ${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}
-        AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
-        AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
       run: |
-        if [ "$AZURE_WEBAPP_DEPLOY_ENABLED" = "true" ] && [ -n "$AZURE_WEBAPP_NAME" ] && [ -n "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
+        if [ "${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}" = "true" ] && [ -n "${{ env.AZURE_WEBAPP_NAME }}" ] && [ -n "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}" ]; then
           echo "should_upload=true" >> "$GITHUB_OUTPUT"
         else
           echo "should_upload=false" >> "$GITHUB_OUTPUT"

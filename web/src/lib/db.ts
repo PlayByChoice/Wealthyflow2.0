@@ -9,9 +9,6 @@ export type UserRecord = {
   salt: string;
 };
 
-const DEFAULT_ADMIN_USERNAME = "Thetymes1";
-const DEFAULT_ADMIN_PASSWORD = "Pass1698$";
-
 let dbInstance: Database.Database | null = null;
 
 function getDatabasePath() {
@@ -23,6 +20,30 @@ function getDatabasePath() {
 
 function hashPassword(password: string, salt: string) {
   return scryptSync(password, salt, 64).toString("hex");
+}
+
+function migrateUsersTable(db: Database.Database) {
+  const columns = db.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
+
+  const hasUsername = columns.some((column) => column.name === "username");
+  const hasEmail = columns.some((column) => column.name === "email");
+
+  if (!hasUsername && hasEmail) {
+    db.prepare("ALTER TABLE users RENAME TO users_legacy").run();
+    db.prepare(
+      `CREATE TABLE users (
+        username TEXT PRIMARY KEY,
+        password_hash TEXT NOT NULL,
+        salt TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+    ).run();
+    db.prepare(
+      `INSERT INTO users (username, password_hash, salt, created_at)
+       SELECT email, password_hash, salt, created_at FROM users_legacy`
+    ).run();
+    db.prepare("DROP TABLE users_legacy").run();
+  }
 }
 
 function getDb() {
@@ -41,42 +62,44 @@ function getDb() {
   db.pragma("journal_mode = WAL");
   db.prepare(
     `CREATE TABLE IF NOT EXISTS users (
-      email TEXT PRIMARY KEY,
+      username TEXT PRIMARY KEY,
       password_hash TEXT NOT NULL,
       salt TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`
   ).run();
 
+  migrateUsersTable(db);
+
   dbInstance = db;
   return db;
 }
 
 export function ensureAdminUser() {
-  const username = (process.env.AUTH_ADMIN_USERNAME ?? DEFAULT_ADMIN_USERNAME).trim();
-  const password = process.env.AUTH_ADMIN_PASSWORD ?? DEFAULT_ADMIN_PASSWORD;
+  const username = (process.env.AUTH_ADMIN_USERNAME ?? "").trim();
+  const password = process.env.AUTH_ADMIN_PASSWORD ?? "";
 
   if (!username || !password) {
-    return;
+    return false;
   }
 
   const db = getDb();
-  const existing = db.prepare("SELECT email FROM users WHERE email = ?").get(username) as { email: string } | undefined;
+  const existing = db.prepare("SELECT username FROM users WHERE username = ?").get(username) as { username: string } | undefined;
 
-  if (existing) {
-    return;
+  if (!existing) {
+    const salt = randomBytes(16).toString("hex");
+    const passwordHash = hashPassword(password, salt);
+
+    db.prepare("INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)").run(username, passwordHash, salt);
   }
 
-  const salt = randomBytes(16).toString("hex");
-  const passwordHash = hashPassword(password, salt);
-
-  db.prepare("INSERT INTO users (email, password_hash, salt) VALUES (?, ?, ?)").run(username, passwordHash, salt);
+  return true;
 }
 
 export function findUserByUsername(username: string): UserRecord | null {
   const db = getDb();
   const user = db
-    .prepare("SELECT email AS username, password_hash AS passwordHash, salt FROM users WHERE email = ?")
+    .prepare("SELECT username, password_hash AS passwordHash, salt FROM users WHERE username = ?")
     .get(username) as UserRecord | undefined;
 
   return user ?? null;

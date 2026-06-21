@@ -5,11 +5,17 @@ import { loginAction, type LoginState } from "./actions";
 
 const initialState: LoginState = { error: null };
 
-export default function LoginForm() {
+type LoginFormProps = {
+  nextPath?: string;
+};
+
+export default function LoginForm({ nextPath = "/dashboard" }: LoginFormProps) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
 
   return (
     <form action={formAction} className="w-full max-w-sm space-y-4 rounded-lg border border-black/10 p-6">
+      <input type="hidden" name="next" value={nextPath} />
+
       <div className="space-y-2">
         <label className="block text-sm font-medium" htmlFor="username">
           Username

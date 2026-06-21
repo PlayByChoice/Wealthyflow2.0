@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 const SESSION_COOKIE = "wf_session";
-const SESSION_TTL_SECONDS = 60 * 60 * 24;
+const SESSION_TTL_SECONDS = 60 * 60 * 24; // 24 hours
 
 type SessionPayload = {
   email: string;
@@ -24,7 +24,7 @@ function getSecret() {
     throw new Error("SESSION_SECRET must be set in production.");
   }
 
-  return "dev-only-session-secret-change-me";
+  return "dev-only-session-secret-change-me-please-use-env-secret";
 }
 
 function encodeBase64Url(value: string) {

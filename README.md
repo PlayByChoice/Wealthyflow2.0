@@ -21,3 +21,10 @@ Auth now uses a local SQLite database (`web/data/wealthyflow.db` by default).
 Use the credentials in `.env.local` (`AUTH_ADMIN_USERNAME` and `AUTH_ADMIN_PASSWORD`) for the initial seeded admin user.
 
 You can change DB location with `DATABASE_PATH`.
+
+For the requested owner account, set in `.env.local`:
+
+```bash
+AUTH_ADMIN_USERNAME=Thetymes1
+AUTH_ADMIN_PASSWORD=Pass1698$
+```

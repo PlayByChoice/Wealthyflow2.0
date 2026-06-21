@@ -107,10 +107,9 @@ jobs:
 
     - name: Check artifact upload requirements
       id: artifact-config
-      env:
-        HAS_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE != '' && secrets.AZURE_WEBAPP_PUBLISH_PROFILE != null }}
       run: |
-        if [ "${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}" = "true" ] && [ -n "${{ env.AZURE_WEBAPP_NAME }}" ] && [ "$HAS_PUBLISH_PROFILE" = "true" ]; then
+        # Early gate avoids unnecessary artifact upload when deployment is intentionally disabled.
+        if [ "${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}" = "true" ] && [ -n "${{ env.AZURE_WEBAPP_NAME }}" ]; then
           echo "should_upload=true" >> "$GITHUB_OUTPUT"
         else
           echo "should_upload=false" >> "$GITHUB_OUTPUT"

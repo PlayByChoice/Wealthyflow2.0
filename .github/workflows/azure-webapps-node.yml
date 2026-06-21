@@ -24,7 +24,7 @@ on:
 
 env:
   AZURE_WEBAPP_DEPLOY_ENABLED: 'false' # set to 'true' to enable Azure deployment
-  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }} # set repository variable AZURE_WEBAPP_NAME
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # set repository variable AZURE_WEBAPP_NAME
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   AZURE_DEPLOYMENT_ENVIRONMENT: 'Production' # set to target environment name
   NODE_VERSION: '20.x'                # set this to the node version to use
@@ -144,12 +144,13 @@ jobs:
 
   deploy:
     # Restrict production deployments to manual dispatch even when push builds are enabled.
-    if: ${{ github.event_name == 'workflow_dispatch' && needs.build.outputs.deployment_configured == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && needs.build.result == 'success' && needs.build.outputs.deployment_configured == 'true' }}
     permissions:
       contents: none
     runs-on: ubuntu-latest
     needs: build
     environment:
+      # Ensure a matching GitHub Environment exists for this name to apply protection rules.
       name: ${{ env.AZURE_DEPLOYMENT_ENVIRONMENT }}
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 

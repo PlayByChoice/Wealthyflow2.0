@@ -19,11 +19,11 @@
 
 on:
   push:
-    branches: [ "change" ] # repository live branch
+    branches: [ "change", "main", "production" ] # deploy from live/prod branch names
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_DEPLOY_ENABLED: 'true' # set to 'false' to disable production deployment
+  AZURE_WEBAPP_DEPLOY_ENABLED: ${{ vars.AZURE_WEBAPP_DEPLOY_ENABLED || 'false' }} # set repository variable to 'true' to enable deployment
   AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # configure in repository variables
   AZURE_WEBAPP_PACKAGE_PATH: ${{ vars.AZURE_WEBAPP_PACKAGE_PATH || '.' }} # configure in repository variables
   NODE_VERSION: ${{ vars.NODE_VERSION || '20.x' }} # configure in repository variables

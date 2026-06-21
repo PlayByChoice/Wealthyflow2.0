@@ -142,7 +142,7 @@ jobs:
         path: .
 
   deploy:
-    if: ${{ needs.build.outputs.deployment_configured == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && needs.build.outputs.deployment_configured == 'true' }}
     permissions:
       contents: none
     runs-on: ubuntu-latest

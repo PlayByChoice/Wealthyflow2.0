@@ -40,10 +40,17 @@ jobs:
       id: node-files
       run: |
         project_path="${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+        cache_prefix=""
+
+        if [ "$project_path" != "." ]; then
+          cache_prefix="$project_path/"
+        fi
 
         if [ ! -d "$project_path" ]; then
           echo "has_package=false" >> "$GITHUB_OUTPUT"
           echo "has_npm_lock=false" >> "$GITHUB_OUTPUT"
+          echo "cache_mode=" >> "$GITHUB_OUTPUT"
+          echo "cache_dependency_path=" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -57,28 +64,25 @@ jobs:
 
         if [ -f package-lock.json ]; then
           echo "has_npm_lock=true" >> "$GITHUB_OUTPUT"
-          echo "cache_dependency_path=$project_path/package-lock.json" >> "$GITHUB_OUTPUT"
+          echo "cache_mode=npm" >> "$GITHUB_OUTPUT"
+          echo "cache_dependency_path=${cache_prefix}package-lock.json" >> "$GITHUB_OUTPUT"
         elif [ -f npm-shrinkwrap.json ]; then
           echo "has_npm_lock=true" >> "$GITHUB_OUTPUT"
-          echo "cache_dependency_path=$project_path/npm-shrinkwrap.json" >> "$GITHUB_OUTPUT"
+          echo "cache_mode=npm" >> "$GITHUB_OUTPUT"
+          echo "cache_dependency_path=${cache_prefix}npm-shrinkwrap.json" >> "$GITHUB_OUTPUT"
         else
           echo "has_npm_lock=false" >> "$GITHUB_OUTPUT"
+          echo "cache_mode=" >> "$GITHUB_OUTPUT"
           echo "cache_dependency_path=" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Set up Node.js with npm cache
-      if: ${{ steps.node-files.outputs.has_package == 'true' && steps.node-files.outputs.has_npm_lock == 'true' }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: ${{ steps.node-files.outputs.cache_dependency_path }}
-
     - name: Set up Node.js
-      if: ${{ steps.node-files.outputs.has_package == 'true' && steps.node-files.outputs.has_npm_lock != 'true' }}
+      if: ${{ steps.node-files.outputs.has_package == 'true' }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
+        cache: ${{ steps.node-files.outputs.cache_mode }}
+        cache-dependency-path: ${{ steps.node-files.outputs.cache_dependency_path }}
 
     - name: npm install, build, and test
       if: ${{ steps.node-files.outputs.has_package == 'true' }}

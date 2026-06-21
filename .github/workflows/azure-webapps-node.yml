@@ -40,28 +40,42 @@ jobs:
     - name: Detect Node.js project files
       id: node-files
       run: |
-        project_path="${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+        workspace_path="$(realpath -m "$GITHUB_WORKSPACE")"
+        project_path_input="${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+        resolved_project_path="$(realpath -m "$GITHUB_WORKSPACE/$project_path_input")"
+        project_path="."
         cache_prefix=""
+
+        case "$resolved_project_path" in
+          "$workspace_path"|"$workspace_path"/*) ;;
+          *)
+            echo "::error::AZURE_WEBAPP_PACKAGE_PATH must stay within the repository."
+            exit 1
+            ;;
+        esac
+
+        if [ "$resolved_project_path" != "$workspace_path" ]; then
+          project_path="${resolved_project_path#"$workspace_path"/}"
+        fi
 
         echo "has_package=false" >> "$GITHUB_OUTPUT"
         echo "has_npm_lock=false" >> "$GITHUB_OUTPUT"
         echo "cache_mode=" >> "$GITHUB_OUTPUT"
         echo "cache_dependency_path=" >> "$GITHUB_OUTPUT"
+        echo "project_path=$project_path" >> "$GITHUB_OUTPUT"
 
         if [ "$project_path" != "." ]; then
           cache_prefix="$project_path/"
         fi
 
-        if [ ! -d "$project_path" ]; then
+        if [ ! -d "$resolved_project_path" ]; then
           exit 0
         fi
 
-        cd -- "$project_path"
+        cd -- "$resolved_project_path"
 
         if [ -f package.json ]; then
           echo "has_package=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "has_package=false" >> "$GITHUB_OUTPUT"
         fi
 
         if [ -f package-lock.json ]; then
@@ -72,10 +86,6 @@ jobs:
           echo "has_npm_lock=true" >> "$GITHUB_OUTPUT"
           echo "cache_mode=npm" >> "$GITHUB_OUTPUT"
           echo "cache_dependency_path=${cache_prefix}npm-shrinkwrap.json" >> "$GITHUB_OUTPUT"
-        else
-          echo "has_npm_lock=false" >> "$GITHUB_OUTPUT"
-          echo "cache_mode=" >> "$GITHUB_OUTPUT"
-          echo "cache_dependency_path=" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Set up Node.js
@@ -89,7 +99,7 @@ jobs:
     - name: npm install, build, and test
       if: ${{ steps.node-files.outputs.has_package == 'true' }}
       # Run npm commands from the configured application path.
-      working-directory: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      working-directory: ${{ steps.node-files.outputs.project_path }}
       run: |
         npm install
         npm run build --if-present
@@ -123,11 +133,17 @@ jobs:
         AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
         AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
       run: |
-        if [ "$AZURE_WEBAPP_DEPLOY_ENABLED" = "true" ] && [ -n "$AZURE_WEBAPP_NAME" ] && [ -n "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
-          echo "configured=true" >> "$GITHUB_OUTPUT"
-        else
+        if [ "$AZURE_WEBAPP_DEPLOY_ENABLED" != "true" ]; then
           echo "configured=false" >> "$GITHUB_OUTPUT"
-          echo "Azure deployment is disabled or not fully configured; skipping deploy."
+          echo "Azure deployment is disabled; skipping deploy."
+        elif [ -z "$AZURE_WEBAPP_NAME" ]; then
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "AZURE_WEBAPP_NAME is not set; skipping deploy."
+        elif [ -z "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "AZURE_WEBAPP_PUBLISH_PROFILE is not set; skipping deploy."
+        else
+          echo "configured=true" >> "$GITHUB_OUTPUT"
         fi
 
     - name: 'Deploy to Azure WebApp'

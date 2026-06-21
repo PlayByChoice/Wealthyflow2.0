@@ -42,7 +42,7 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
 
     - name: npm install, build, and test
-      if: hashFiles('package.json') != ''
+      if: hashFiles('package.json')
       run: |
         npm install
         npm run build --if-present

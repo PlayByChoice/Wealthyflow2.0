@@ -143,8 +143,8 @@ jobs:
         path: .
 
   deploy:
-    # Restrict production deployments to manual dispatch even when push builds are enabled.
-    if: ${{ github.event_name == 'workflow_dispatch' && needs.build.result == 'success' && needs.build.outputs.deployment_configured == 'true' }}
+    # Deploy automatically when build succeeds and deployment configuration is complete.
+    if: ${{ needs.build.result == 'success' && needs.build.outputs.deployment_configured == 'true' }}
     permissions:
       contents: none
     runs-on: ubuntu-latest

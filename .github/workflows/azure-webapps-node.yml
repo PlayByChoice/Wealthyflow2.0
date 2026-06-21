@@ -145,7 +145,7 @@ jobs:
 
   deploy:
     # Deploy automatically when build succeeds and deployment configuration is complete.
-    if: github.event_name == 'push' && needs.build.outputs.deployment_configured == 'true'
+    if: github.event_name == 'push' && fromJSON(needs.build.outputs.deployment_configured)
     permissions:
       contents: none
     runs-on: ubuntu-latest

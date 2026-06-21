@@ -97,7 +97,7 @@ jobs:
     timeout-minutes: 20
     needs: build
     concurrency:
-      group: production-deploy-${{ github.ref }}
+      group: production-deploy
       cancel-in-progress: false
     environment:
       name: 'Production'

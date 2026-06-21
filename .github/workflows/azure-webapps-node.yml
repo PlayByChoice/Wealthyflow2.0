@@ -24,7 +24,7 @@ on:
 
 env:
   AZURE_WEBAPP_DEPLOY_ENABLED: 'false' # set to 'true' to enable Azure deployment
-  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # set as a repository variable in Settings > Secrets and variables > Actions > Variables tab
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # set as a repository variable in Settings > Secrets and variables > Actions > Repository variables
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '20.x'                # set this to the node version to use
 
@@ -143,7 +143,7 @@ jobs:
 
   deploy:
     # Deploy automatically when build succeeds and deployment configuration is complete.
-    if: ${{ needs.build.outputs.deployment_configured == 'true' }}
+    if: needs.build.outputs.deployment_configured == 'true'
     permissions:
       contents: none
     runs-on: ubuntu-latest

@@ -19,7 +19,7 @@
 
 on:
   push:
-    branches: [ "change", "main", "production" ] # deploy from live/prod branch names
+    branches: [ "main", "production", "release", "master", "stable" ] # deploy from conventional live/prod branch names
   workflow_dispatch:
 
 env:

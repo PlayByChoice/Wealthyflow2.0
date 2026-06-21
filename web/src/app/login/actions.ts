@@ -18,6 +18,10 @@ export async function loginAction(_: LoginState, formData: FormData): Promise<Lo
     return { error: "Email and password are required." };
   }
 
+  if (process.env.NODE_ENV === "production" && (!process.env.AUTH_DEMO_EMAIL || !process.env.AUTH_DEMO_PASSWORD)) {
+    return { error: "Server auth configuration is missing." };
+  }
+
   const validEmail = process.env.AUTH_DEMO_EMAIL ?? FALLBACK_EMAIL;
   const validPassword = process.env.AUTH_DEMO_PASSWORD ?? FALLBACK_PASSWORD;
 

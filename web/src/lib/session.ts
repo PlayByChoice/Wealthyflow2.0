@@ -14,6 +14,10 @@ function getSecret() {
     return process.env.SESSION_SECRET;
   }
 
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SESSION_SECRET must be set in production.");
+  }
+
   return "dev-only-session-secret-change-me";
 }
 
@@ -56,7 +60,7 @@ function parseToken(token: string): SessionPayload | null {
       return null;
     }
 
-    if (Date.now() >= parsed.exp * 1000) {
+    if (Date.now() > parsed.exp * 1000) {
       return null;
     }
 

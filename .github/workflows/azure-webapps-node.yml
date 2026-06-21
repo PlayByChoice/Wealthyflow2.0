@@ -43,15 +43,16 @@ jobs:
         project_path="${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
         cache_prefix=""
 
+        echo "has_package=false" >> "$GITHUB_OUTPUT"
+        echo "has_npm_lock=false" >> "$GITHUB_OUTPUT"
+        echo "cache_mode=" >> "$GITHUB_OUTPUT"
+        echo "cache_dependency_path=" >> "$GITHUB_OUTPUT"
+
         if [ "$project_path" != "." ]; then
           cache_prefix="$project_path/"
         fi
 
         if [ ! -d "$project_path" ]; then
-          echo "has_package=false" >> "$GITHUB_OUTPUT"
-          echo "has_npm_lock=false" >> "$GITHUB_OUTPUT"
-          echo "cache_mode=" >> "$GITHUB_OUTPUT"
-          echo "cache_dependency_path=" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -122,11 +123,11 @@ jobs:
         AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
         AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
       run: |
-        if [ "$AZURE_WEBAPP_DEPLOY_ENABLED" != "true" ] || [ -z "$AZURE_WEBAPP_NAME" ] || [ -z "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
+        if [ "$AZURE_WEBAPP_DEPLOY_ENABLED" = "true" ] && [ -n "$AZURE_WEBAPP_NAME" ] && [ -n "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+        else
           echo "configured=false" >> "$GITHUB_OUTPUT"
           echo "Azure deployment is disabled or not fully configured; skipping deploy."
-        else
-          echo "configured=true" >> "$GITHUB_OUTPUT"
         fi
 
     - name: 'Deploy to Azure WebApp'

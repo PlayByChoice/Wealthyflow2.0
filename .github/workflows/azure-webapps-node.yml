@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: ''               # set this to your application's name
+  AZURE_WEBAPP_NAME: ''               # set this to your application's name; leave blank to skip deployment
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '20.x'                # set this to the node version to use
 
@@ -95,9 +95,10 @@ jobs:
     - name: Check Azure deployment configuration
       id: deployment-config
       env:
+        AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
         AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
       run: |
-        if [ -z "${{ env.AZURE_WEBAPP_NAME }}" ] || [ -z "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
+        if [ -z "$AZURE_WEBAPP_NAME" ] || [ -z "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
           echo "configured=false" >> "$GITHUB_OUTPUT"
           echo "Azure deployment is not configured; skipping deploy."
         else

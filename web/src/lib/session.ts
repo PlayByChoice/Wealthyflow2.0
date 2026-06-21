@@ -66,7 +66,7 @@ function parseToken(token: string): SessionPayload | null {
       return null;
     }
 
-    if (Date.now() > parsed.exp * 1000) {
+    if (Date.now() >= parsed.exp * 1000) {
       return null;
     }
 

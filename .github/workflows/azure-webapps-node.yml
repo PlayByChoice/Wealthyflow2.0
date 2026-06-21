@@ -19,7 +19,7 @@
 
 on:
   push:
-    branches: [ "change" ]
+    branches: [ "change" ] # repository live branch
   workflow_dispatch:
 
 env:
@@ -34,6 +34,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      deployment-configured: ${{ steps.artifact-config.outputs.should_upload }}
     steps:
     - uses: actions/checkout@v4
 
@@ -142,34 +144,14 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-    - name: Check Azure deployment configuration
-      id: deployment-config
-      env:
-        AZURE_WEBAPP_DEPLOY_ENABLED: ${{ env.AZURE_WEBAPP_DEPLOY_ENABLED }}
-        AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
-        AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-      run: |
-        if [ "$AZURE_WEBAPP_DEPLOY_ENABLED" != "true" ]; then
-          echo "configured=false" >> "$GITHUB_OUTPUT"
-          echo "Azure deployment is disabled; skipping deploy."
-        elif [ -z "$AZURE_WEBAPP_NAME" ]; then
-          echo "configured=false" >> "$GITHUB_OUTPUT"
-          echo "AZURE_WEBAPP_NAME is not set; skipping deploy."
-        elif [ -z "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
-          echo "configured=false" >> "$GITHUB_OUTPUT"
-          echo "AZURE_WEBAPP_PUBLISH_PROFILE is not set; skipping deploy."
-        else
-          echo "configured=true" >> "$GITHUB_OUTPUT"
-        fi
-
     - name: Download artifact from build job
-      if: ${{ steps.deployment-config.outputs.configured == 'true' }}
+      if: ${{ needs.build.outputs.deployment-configured == 'true' }}
       uses: actions/download-artifact@v4
       with:
         name: node-app
 
     - name: 'Deploy to Azure WebApp'
-      if: ${{ steps.deployment-config.outputs.configured == 'true' }}
+      if: ${{ needs.build.outputs.deployment-configured == 'true' }}
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:

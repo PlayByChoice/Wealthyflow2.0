@@ -28,7 +28,7 @@ export async function loginAction(_: LoginState, formData: FormData): Promise<Lo
   }
 
   if (!ensureAdminUser()) {
-    return { error: "Server auth configuration is missing." };
+    return { error: "Authentication not configured. Set AUTH_ADMIN_USERNAME and AUTH_ADMIN_PASSWORD." };
   }
 
   const user = findUserByUsername(username);

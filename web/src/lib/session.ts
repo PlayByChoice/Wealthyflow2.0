@@ -5,7 +5,7 @@ const SESSION_COOKIE = "wf_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24; // 24 hours
 
 type SessionPayload = {
-  email: string;
+  username: string;
   exp: number;
 };
 
@@ -62,7 +62,7 @@ function parseToken(token: string): SessionPayload | null {
 
   try {
     const parsed = JSON.parse(decodeBase64Url(encodedPayload)) as SessionPayload;
-    if (typeof parsed.email !== "string" || typeof parsed.exp !== "number") {
+    if (typeof parsed.username !== "string" || typeof parsed.exp !== "number") {
       return null;
     }
 
@@ -76,11 +76,11 @@ function parseToken(token: string): SessionPayload | null {
   }
 }
 
-export async function createSession(email: string) {
+export async function createSession(username: string) {
   const expiry = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
   const cookieStore = await cookies();
 
-  cookieStore.set(SESSION_COOKIE, createToken({ email, exp: expiry }), {
+  cookieStore.set(SESSION_COOKIE, createToken({ username, exp: expiry }), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

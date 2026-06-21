@@ -9,11 +9,15 @@ A Next.js app is scaffolded in `/web` with a basic authentication flow.
 
 ```bash
 cd web
-cp .env.example .env.local
+cp env.example .env.local
 npm install
 npm run dev
 ```
 
-### Demo login
+### Database-backed login
 
-Use the credentials in `.env.local` (`AUTH_DEMO_EMAIL` and `AUTH_DEMO_PASSWORD`).
+Auth now uses a local SQLite database (`web/data/wealthyflow.db` by default).
+
+Use the credentials in `.env.local` (`AUTH_DEMO_EMAIL` and `AUTH_DEMO_PASSWORD`) for the initial seeded user.
+
+You can change DB location with `DATABASE_PATH`.

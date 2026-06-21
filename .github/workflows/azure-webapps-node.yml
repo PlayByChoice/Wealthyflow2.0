@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_DEPLOY_ENABLED: ${{ vars.AZURE_WEBAPP_DEPLOY_ENABLED || 'false' }} # set repository variable to 'true' to enable deployment
+  AZURE_WEBAPP_DEPLOY_ENABLED: ${{ vars.AZURE_WEBAPP_DEPLOY_ENABLED || 'false' }} # set AZURE_WEBAPP_DEPLOY_ENABLED repository variable to 'true' to enable deployment
   AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || '' }} # configure in repository variables
   AZURE_WEBAPP_PACKAGE_PATH: ${{ vars.AZURE_WEBAPP_PACKAGE_PATH || '.' }} # configure in repository variables
   NODE_VERSION: ${{ vars.NODE_VERSION || '20.x' }} # configure in repository variables
@@ -139,9 +139,6 @@ jobs:
       contents: none
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
     - name: Download artifact from build job

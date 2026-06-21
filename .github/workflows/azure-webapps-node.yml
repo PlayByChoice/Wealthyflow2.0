@@ -140,6 +140,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: ${{ needs.build.outputs.deployment-configured == 'true' }}
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
     - name: Download artifact from build job
